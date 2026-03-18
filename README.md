@@ -1,73 +1,42 @@
-# React + TypeScript + Vite
+# ModHiker 🧭
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ModHiker is a high-fidelity, immersive discovery tool for Minecraft projects, inspired by the aesthetic of Cloud Hiker. It allows users to "hike" through the vast landscape of the [Modrinth](https://modrinth.com) ecosystem, discovering random mods, resource packs, shaders, and modpacks.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Random Discovery**: One-click exploration to find your next favorite Minecraft project.
+- **Smart Filtering**: Narrow your search by project type (Mods, Resource Packs, etc.) or categories (Adventure, Magic, Tech, etc.).
+- **Immersive UI**: A modern, dark-themed interface with glassmorphism effects and responsive design.
+- **Direct Access**: Quick links to view the project details and download directly from Modrinth.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Framework**: React 19 + TypeScript
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **API**: Modrinth API (Search and Projects_Random endpoints)
+- **Build Tool**: Vite
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+3. Build for production:
+   ```bash
+   npm run build
+   ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Development
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The project uses a custom service layer (`src/services/modrinth.ts`) to handle Modrinth API interactions. When filters are applied, the app uses a random-offset search strategy to ensure a truly unpredictable discovery experience despite API limitations.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+*Inspired by Cloud Hiker. Powered by the Modrinth Engine.*

@@ -1,28 +1,59 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Compass, ExternalLink, RefreshCw, Layers, Download, Users } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Compass, ExternalLink, RefreshCw, Layers, Download, Users, Filter } from 'lucide-react';
 import { fetchRandomMod, getModUrl, type ModrinthProject } from './services/modrinth';
+
+const PROJECT_TYPES = [
+  { id: 'any', name: 'All Types' },
+  { id: 'mod', name: 'Mods' },
+  { id: 'resourcepack', name: 'Resource Packs' },
+  { id: 'shader', name: 'Shaders' },
+  { id: 'modpack', name: 'Modpacks' },
+];
+
+const CATEGORIES = [
+  { id: 'any', name: 'All Categories' },
+  { id: 'adventure', name: 'Adventure' },
+  { id: 'magic', name: 'Magic' },
+  { id: 'technology', name: 'Technology' },
+  { id: 'optimization', name: 'Optimization' },
+  { id: 'decoration', name: 'Decoration' },
+  { id: 'utility', name: 'Utility' },
+  { id: 'worldgen', name: 'World Generation' },
+];
 
 function App() {
   const [currentMod, setCurrentMod] = useState<ModrinthProject | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const handleHike = useCallback(async () => {
+  const [projectType, setProjectType] = useState('mod');
+  const [category, setCategory] = useState('any');
+
+  const initialFetchDone = useRef(false);
+
+  const handleHike = useCallback(async (forcedFilters?: { projectType: string, category: string }) => {
     setLoading(true);
     setError(null);
     try {
-      const mod = await fetchRandomMod();
+      const filters = forcedFilters
+        ? { project_type: forcedFilters.projectType, category: forcedFilters.category }
+        : { project_type: projectType, category: category };
+
+      const mod = await fetchRandomMod(filters);
       setCurrentMod(mod);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError('Failed to find a new path. Try again!');
+      setError(err.message || 'Failed to find a new path. Try again!');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [projectType, category]);
 
   useEffect(() => {
-    handleHike();
+    if (!initialFetchDone.current) {
+      handleHike();
+      initialFetchDone.current = true;
+    }
   }, [handleHike]);
 
   return (
@@ -34,17 +65,53 @@ function App() {
       </div>
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 p-8 flex items-center justify-between z-10">
+      <header className="fixed top-0 left-0 right-0 p-8 flex items-center justify-between z-20">
         <div className="flex items-center gap-3">
           <div className="bg-emerald-500 p-2.5 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)]">
             <Compass className="w-6 h-6 text-black" />
           </div>
           <h1 className="text-2xl font-black tracking-tighter uppercase italic">ModHiker</h1>
         </div>
+
+        {/* Quick Filters */}
+        <div className="hidden md:flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl p-2 backdrop-blur-xl">
+          <div className="flex items-center gap-2 px-3">
+            <Filter className="w-4 h-4 text-emerald-500" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Filters</span>
+          </div>
+
+          <select
+            value={projectType}
+            onChange={(e) => {
+              setProjectType(e.target.value);
+              handleHike({ projectType: e.target.value, category });
+            }}
+            className="bg-transparent text-sm font-bold border-none focus:ring-0 cursor-pointer hover:text-emerald-400 transition-colors outline-none"
+          >
+            {PROJECT_TYPES.map(type => (
+              <option key={type.id} value={type.id} className="bg-[#0a0a0a]">{type.name}</option>
+            ))}
+          </select>
+
+          <div className="w-px h-4 bg-white/10" />
+
+          <select
+            value={category}
+            onChange={(e) => {
+              setCategory(e.target.value);
+              handleHike({ projectType, category: e.target.value });
+            }}
+            className="bg-transparent text-sm font-bold border-none focus:ring-0 cursor-pointer hover:text-emerald-400 transition-colors outline-none pr-4"
+          >
+            {CATEGORIES.map(cat => (
+              <option key={cat.id} value={cat.id} className="bg-[#0a0a0a]">{cat.name}</option>
+            ))}
+          </select>
+        </div>
       </header>
 
       {/* Main Content */}
-      <main className="relative z-0 max-w-5xl w-full">
+      <main className="relative z-10 max-w-5xl w-full">
         {loading ? (
           <div className="flex flex-col items-center gap-6 animate-pulse">
             <div className="relative">
@@ -54,10 +121,10 @@ function App() {
             <p className="text-2xl font-bold text-gray-400 tracking-tight">Scouting the next trail...</p>
           </div>
         ) : error ? (
-          <div className="bg-red-900/10 border border-red-500/20 p-10 rounded-3xl text-center backdrop-blur-md">
+          <div className="bg-red-900/10 border border-red-500/20 p-10 rounded-3xl text-center backdrop-blur-md max-w-lg mx-auto">
             <p className="text-2xl font-bold text-red-400 mb-6">{error}</p>
             <button
-              onClick={handleHike}
+              onClick={() => handleHike()}
               className="px-8 py-4 bg-white text-black font-black rounded-2xl hover:bg-red-500 hover:text-white transition-all active:scale-95 shadow-xl"
             >
               Try Again
@@ -131,7 +198,7 @@ function App() {
                 </a>
 
                 <button
-                  onClick={handleHike}
+                  onClick={() => handleHike()}
                   className="px-10 py-5 bg-white/5 hover:bg-white/10 text-white font-black rounded-2xl transition-all duration-300 active:scale-95 flex items-center gap-3 border border-white/10 shadow-xl"
                 >
                   <RefreshCw className="w-5 h-5" />
@@ -143,9 +210,37 @@ function App() {
         )}
       </main>
 
+      {/* Mobile Filters */}
+      <div className="md:hidden fixed bottom-32 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+         <select
+            value={projectType}
+            onChange={(e) => {
+              setProjectType(e.target.value);
+              handleHike({ projectType: e.target.value, category });
+            }}
+            className="bg-white/10 backdrop-blur-2xl border border-white/10 rounded-xl px-4 py-2 text-xs font-bold outline-none"
+          >
+            {PROJECT_TYPES.map(type => (
+              <option key={type.id} value={type.id} className="bg-[#0a0a0a]">{type.name}</option>
+            ))}
+          </select>
+          <select
+            value={category}
+            onChange={(e) => {
+              setCategory(e.target.value);
+              handleHike({ projectType, category: e.target.value });
+            }}
+            className="bg-white/10 backdrop-blur-2xl border border-white/10 rounded-xl px-4 py-2 text-xs font-bold outline-none"
+          >
+            {CATEGORIES.map(cat => (
+              <option key={cat.id} value={cat.id} className="bg-[#0a0a0a]">{cat.name}</option>
+            ))}
+          </select>
+      </div>
+
       {/* Footer */}
       <footer className="fixed bottom-0 left-0 right-0 p-10 text-center pointer-events-none">
-        <p className="text-gray-700 text-xs font-bold uppercase tracking-[0.2em]">
+        <p className="text-gray-700 text-[10px] font-bold uppercase tracking-[0.3em]">
           ModHiker &copy; 2024 &bull; Inspired by Cloud Hiker &bull; Modrinth Engine
         </p>
       </footer>
